@@ -1,7 +1,6 @@
 //Estilizacao para buttons
 .button{
     height: 50px;
-    margin-top: 64px;
     border-radius: 8px;
     font-weight: 500;
     background: #835AFD;
@@ -19,6 +18,13 @@
     
     img{
         margin-right: 8px;
+    }
+
+    //Quando o botão estiver com a classe outlined...
+    &.outlined{
+        background: #FFF;
+        border: 1px solid #835AFD;
+        color: #835AFD;
     }
     
     //Aplicando efeito de hover apenas se o botão não estiver desabilitado

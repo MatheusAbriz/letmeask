@@ -1,19 +1,20 @@
 import illustrationImg from '../../assets/images/illustration.svg';
 import logoImg from '../../assets/images/logo.svg';
 
-import { type FormEvent, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { type FormEvent, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth.scss';
 
 import { Button } from '../../components/Button/Button';
 import { useAuth } from '../../hooks/useAuth';
 
 import { database } from '../../services/firebase';
-import { get, ref, set } from 'firebase/database';
+import { child, getDatabase, push, ref, set } from 'firebase/database';
 
 export const NewRoom = () => {
     const { user } = useAuth();
     const [ newRoom, setNewRoom ] = useState<string>('');
+    const navigate = useNavigate();
 
     //Criando uma sala
     const handleCreateRoom = async(event: FormEvent) =>{
@@ -22,15 +23,25 @@ export const NewRoom = () => {
         //Trim -> remove espaços
         if(newRoom.trim() === '') return;
 
+
+        //Criando uma nova key
+        const newRoomKey = push(child(ref(database), 'rooms')).key;
+        
         //Estruturando os dados da entidade room
         const roomData = {
+            roomKey: newRoomKey,
             title: newRoom,
             authorId: user?.id,
         }
 
         //Gravando os dados direto no realtime database
-        await set(ref(database, 'rooms/'), roomData);
-
+        const db = getDatabase()
+        await set(
+            ref(db, 'rooms/' + newRoomKey), roomData
+        );
+        
+        //Navegando para a página junto com o ID da sala
+        navigate(`/rooms/${roomData.roomKey}`);
     }
 
     return (
