@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { onValue, ref } from "firebase/database";
+import { off, onValue, ref } from "firebase/database";
 import { database } from "../services/firebase";
+import { useAuth } from "./useAuth";
 
 type FirebaseQuestions = Record<
   string,
@@ -12,6 +13,11 @@ type FirebaseQuestions = Record<
     content: string;
     isAnswered: boolean;
     isHighlighted: boolean;
+
+    //Likes é um objeto com a key em string e com o authorId como string
+    likes: Record<string, {
+      authorId: string;
+    }>
   }
 >;
 
@@ -24,13 +30,18 @@ type Question = {
   content: string;
   isAnswered: boolean;
   isHighlighted: boolean;
+  likeCount: number;
+  likeId: string | undefined;
 };
 export const useRoom = (roomId: string | undefined) => {
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<Array<Question>>([]);
   const [title, setTitle] = useState("");
 
   useEffect(() => {
-    return onValue(ref(database, `rooms/${roomId}`), (room) => {
+    const roomRef = ref(database, `rooms/${roomId}`);
+
+   onValue(roomRef, (room) => {
       const databaseRoom = room.val();
       const firebaseQuestions: FirebaseQuestions = databaseRoom.questions ?? {};
 
@@ -42,6 +53,9 @@ export const useRoom = (roomId: string | undefined) => {
             author: value.author,
             isHighlighted: value.isHighlighted,
             isAnswered: value.isAnswered,
+            //Caso nao tenha likes, vem vazio
+            likeCount: Object.values(value.likes ?? {}).length,
+            likeId: Object.entries(value.likes ?? {}).find(([key, like]) => like.authorId === user?.id)?.[0]
           };
         }
       );
@@ -49,7 +63,11 @@ export const useRoom = (roomId: string | undefined) => {
       setTitle(databaseRoom.title);
       setQuestions(parsedQuestions);
     });
-  }, [roomId]);
+
+    return () =>{
+      off(roomRef);
+    }
+  }, [roomId, user?.id]);
 
   return { questions, title };
 };

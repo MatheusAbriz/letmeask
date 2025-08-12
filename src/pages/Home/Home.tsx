@@ -36,6 +36,13 @@ export const Home = () => {
                 return;
             }
 
+            //Verificando se a sala ja havia sido encerrada
+            if(snapshot.val().endedAt){
+                alert('Sala já foi encerrada');
+                return;
+            }
+
+
             navigate(`/rooms/${roomCode}`);
         });
     }
